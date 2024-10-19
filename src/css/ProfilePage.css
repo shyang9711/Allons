@@ -1,0 +1,56 @@
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  text-align: center;
+}
+
+.app-bar {
+  background-color: #f5f5f5;
+}
+
+.app-bar .MuiTypography-root {
+  color: black;
+}
+
+.back-button {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.menu-button {
+  font-size: 16px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.profile-content {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+.profile-section {
+  margin-bottom: 20px;
+}
+
+.input-with-button {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.input-with-button .MuiTextField-root {
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.language-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.language-chip {
+  margin: 4px;
+}

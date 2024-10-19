@@ -1,0 +1,65 @@
+.main-page {
+  text-align: center;
+}
+
+.app-bar {
+  background-color: #f5f5f5 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.date-selection {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.hamburger-menu {
+  position: absolute;
+  z-index: 1001;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+.slide-in-menu {
+  position: fixed;
+  top: 0;
+  right: -250px;
+  width: 250px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.slide-in-menu.open {
+  right: 0;
+}
+
+.menu-button {
+  font-size: 16px;
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.date-picker-container {
+  position: absolute;
+  z-index: 1000;
+  top: 60px; /* Increased from 10px to move it lower */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.date-picker-button {
+  font-size: 16px;
+}
+
+.date-picker-calendar {
+  margin-top: 10px;
+}

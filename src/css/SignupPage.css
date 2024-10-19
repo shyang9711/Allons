@@ -1,0 +1,17 @@
+.signup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 40px;
+}
+
+.signup-title {
+  margin-bottom: 20px;
+  color: #1976d2;
+}
+
+.submit-button {
+  margin-top: 20px !important;
+}
+
+/* Add any additional custom styles here */
