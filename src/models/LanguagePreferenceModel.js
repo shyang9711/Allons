@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Autocomplete, TextField, Chip } from '@mui/material';
 
-function LanguagePreferenceModel({ languages, setLanguages, profile=false,onAddLanguage, onRemoveLanguage }) {
+function LanguagePreferenceModel({ languages, setLanguages, onAddLanguage, onRemoveLanguage }) {
   const languageOptions = [
     'English', 'Spanish', 'French', 'German', 'Italian', 'Chinese', 'Japanese', 'Korean',
     'Arabic', 'Russian', 'Portuguese', 'Hindi', 'Dutch', 'Swedish', 'Greek', 'Turkish'
@@ -15,12 +15,10 @@ function LanguagePreferenceModel({ languages, setLanguages, profile=false,onAddL
 
     const added = newValue.filter(lang => !languages.includes(lang));
     const removed = languages.filter(lang => !newValue.includes(lang));
-    if (profile) {
-        if (added.length > 0) {
-            onAddLanguage(added[0]);
-          } else if (removed.length > 0) {
-            onRemoveLanguage(removed[0]);
-          }
+    if (added.length > 0) {
+        onAddLanguage(added[0]);
+        } else if (removed.length > 0) {
+        onRemoveLanguage(removed[0]);
     }
 
     setLanguages(newValue);

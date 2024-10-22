@@ -1,9 +1,9 @@
 import React from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText, Divider, ListItemButton } from '@mui/material';
-import { Home, Login, AccountCircle, ExitToApp, PersonAdd, GroupAdd, Settings } from '@mui/icons-material';
+import { Home, Login, AccountCircle, ExitToApp, PersonAdd, GroupAdd, Settings, Museum } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-const MenuModel = ({ isOpen, onClose, isLoggedIn, handleLogout }) => {
+const MenuModel = ({ isOpen, onClose, isLoggedIn, handleLogout, username }) => {
   const navigate = useNavigate();
 
   const menuItems = [
@@ -11,7 +11,8 @@ const MenuModel = ({ isOpen, onClose, isLoggedIn, handleLogout }) => {
     ...(isLoggedIn
       ? [
           { text: 'Host Group', icon: <GroupAdd />, path: '/hostgroup' },
-          { text: 'Profile', icon: <AccountCircle />, path: '/profile' },
+          { text: 'Profile', icon: <AccountCircle />, path: `/profile/${username}` },
+          { text: 'Heritex', icon: <Museum />, path: '/heritex' },
           { text: 'Settings', icon: <Settings />, path: '/settings' },
           { text: 'Logout', icon: <ExitToApp />, onClick: handleLogout },
         ]

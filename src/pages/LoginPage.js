@@ -32,7 +32,7 @@ function LoginPage() {
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
       localStorage.setItem('userToken', response.data.token); // Store the token
-      setTimeout(() => navigate('/'), 2000);
+      setTimeout(() => navigate('/'), 500);
     } catch (error) {
       console.error('Error logging in:', error.response ? error.response.data : error);
       setSnackbarMessage('Log in Failed');

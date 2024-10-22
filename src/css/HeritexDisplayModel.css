@@ -1,0 +1,74 @@
+.heritex-grid {
+  padding: 20px;
+  align-items: center;
+  align-content: center;
+  display: flex;
+  margin: 0 auto;
+}
+
+.heritex-grid .heritex-box {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 200px;
+}
+
+.heritex-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.heritex-image-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.heritex-id-flag-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 10%;
+  gap: 100px; /* Add space between index and flag */
+}
+
+.heritex-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80%;
+}
+
+.heritex-right-spacer {
+  width: 10%;
+}
+
+.heritex-icon {
+  width: 100px;
+  color: #bdbdbd;
+}
+
+.heritex-name {
+  color: #ffffff;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.heritex-id {
+  color: #ffffff;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.heritex-flag {
+  width: 25px;
+  height: auto;
+  /* Removed margin-top: 5px; as it's no longer needed */
+}

@@ -1,0 +1,54 @@
+.heritex-page {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.heritex-box-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} 
+
+.app-bar {
+    background-color: #f5f5f5 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    margin-bottom: 20px;
+}
+
+.back-button {
+  color: #000 !important;
+}
+
+.menu-button {
+    padding: 0 !important; /* or smaller value like 4px */
+    color: #000 !important;
+    max-width: 40px;
+    height: 40px;
+}
+
+.box-container {
+  margin-top: 80px; /* Reduced from 200px to create space below the app bar */
+  display: flex;
+  align-items: center;
+}
+
+.box-grid {
+  margin-top: 20px;
+  display: grid;
+  justify-content: center;
+  grid-template-columns: repeat(auto-fit, 100px);
+  gap: 20px;
+  width: 100%;
+}
+
+.box {
+  height: 100px;
+  width: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #808080 !important; /* A specific shade of gray with !important */
+  color: #ffffff !important; /* Pure white with !important */
+  font-weight: bold; /* Make the text bold for better visibility */
+}

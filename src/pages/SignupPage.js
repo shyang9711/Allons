@@ -12,34 +12,36 @@ import { debounce } from 'lodash'; // Make sure to install lodash if not already
 import axios from 'axios'; // Make sure to install axios
 
 function SignupPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState(null);
-  const [nationality, setNationality] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [gender, setGender] = useState('');
-  const [languagePreferences, setLanguagePreferences] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [passwordError, setPasswordError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const navigate = useNavigate();
-  const [touched, setTouched] = useState({});
-  const [phoneCountry, setPhoneCountry] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [isTyping, setIsTyping] = useState({});
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [dateOfBirth, setDateOfBirth] = useState(null);
+    const [nationality, setNationality] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [gender, setGender] = useState('');
+    const [languagePreferences, setLanguagePreferences] = useState([]);
+    const [errors, setErrors] = useState({});
+    const [passwordError, setPasswordError] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const navigate = useNavigate();
+    const [touched, setTouched] = useState({});
+    const [phoneCountry, setPhoneCountry] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [isTyping, setIsTyping] = useState({});
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  const validatePassword = (password) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return regex.test(password);
+    const validatePassword = (password) => {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return regex.test(password);
   };
 
   const validateEmail = (email) => {
-    const regex = /^[a-zA-Z0-9._%+-]+@(gmail|naver)\.com$/;
+    const regex = /^[a-zA-Z0-9]+@(gmail|naver)\.com$/;
     return regex.test(email);
   };
 
@@ -81,6 +83,16 @@ function SignupPage() {
     }
   };
 
+  const handleAddLanguage = (language) => {
+    if (!languagePreferences.includes(language)) {
+      setLanguagePreferences([...languagePreferences, language]);
+    }
+  };
+
+  const handleRemoveLanguage = (language) => {
+    setLanguagePreferences(languagePreferences.filter(lang => lang !== language));
+  };
+
   useEffect(() => {
     if (touched.confirmPassword) {
       validateConfirmPassword();
@@ -106,10 +118,24 @@ function SignupPage() {
   const handleInputChange = (field, value, setter) => {
     setter(value);
   
-    // Clear the error when the user starts typing
+    let error = '';
+    if (field === 'firstName' || field === 'lastName') {
+      if (!validateName(value)) {
+        error = 'Only letters and spaces are allowed';
+      }
+    } else if (field === 'username') {
+      if (!validateUsername(value)) {
+        error = 'Only letters and numbers are allowed';
+      }
+    } else if (field === 'email') {
+      if (!validateEmail(value)) {
+        error = 'Invalid email format. Only letters and numbers are allowed before @';
+      }
+    }
+  
     setErrors((prevErrors) => ({
       ...prevErrors,
-      [field]: '', // Clear the error for the specific field
+      [field]: error,
     }));
   
     setIsTyping(prev => ({ ...prev, [field]: true }));
@@ -166,7 +192,9 @@ const handleSubmit = async (e) => {
   console.log('handleSubmit called');
 
   const newErrors = {};
-
+  
+  if (!firstName.trim()) newErrors.firstName = 'First Name is required';
+  if (!lastName.trim()) newErrors.lastName = 'Last Name is required';
   if (!username && !isTyping.username) newErrors.username = 'Username is required';
   if (!email && !isTyping.email) newErrors.email = 'Email is required';
   if (!password && !isTyping.password) newErrors.password = 'Password is required';
@@ -194,6 +222,8 @@ const handleSubmit = async (e) => {
     console.log('Attempting to send signup request');
     try {
       const response = await axios.post('http://localhost:5000/signup', {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         username,
         email,
         password,
@@ -208,15 +238,15 @@ const handleSubmit = async (e) => {
       setSnackbarSeverity('success');
       setOpenSnackbar(true);
       // Navigate to main page after successful signup
-      setTimeout(() => navigate('/'), 2000); // Navigate after 2 seconds
+      setTimeout(() => navigate('/'), 500);
     } catch (error) {
       console.error('Error signing up:', error.response ? error.response.data : error);
-      setSnackbarMessage(error.response?.data?.message || 'Error signing up. Please try again.');
+      setSnackbarMessage(error.response?.data?.error || 'Error signing up. Please try again.');
       setSnackbarSeverity('error');
       setOpenSnackbar(true);
     }
   } else {
-    console.log('Form has errors or is still being typed:', newErrors, 0);
+    console.log('Form has errors:', newErrors);
     setErrors(newErrors);
   }
 };
@@ -235,6 +265,17 @@ const handleSubmit = async (e) => {
   // Update the error display logic in the JSX
   const showError = (field) => touched[field] && errors[field] && !isTyping[field];
 
+  // Add these new validation functions
+  const validateName = (name) => {
+    const regex = /^[a-zA-Z\s]+$/;
+    return regex.test(name);
+  };
+
+  const validateUsername = (username) => {
+    const regex = /^[a-zA-Z0-9]+$/;
+    return regex.test(username);
+  };
+
   return (
     <Container component="main" maxWidth="xs" className="signup-container">
       <IconButton
@@ -248,141 +289,191 @@ const handleSubmit = async (e) => {
         Sign Up
       </Typography>
       <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="username"
-          label="Username"
-          name="username"
-          autoComplete="username"
-          autoFocus
-          value={username}
-          onChange={(e) => handleInputChange('username', e.target.value, setUsername)}
-          onBlur={() => handleBlur('username')}
-          error={!!errors.username} // Convert string to boolean
-          helperText={errors.username} // Display the error message
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          id="email"
-          label="Email Address"
-          name="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => handleInputChange('email', e.target.value, setEmail)}
-          error={!!errors.email} // Convert string to boolean
-          helperText={errors.email || emailError} // Display the error message
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          name="password"
-          label="Password"
-          type="password"
-          id="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => handleInputChange('password', e.target.value, setPassword)}
-          onBlur={() => handleBlur('password')}
-          error={!!errors.password || !!passwordError}
-          helperText={errors.password || passwordError}
-        />
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          name="confirmPassword"
-          label="Confirm Password"
-          type="password"
-          id="confirmPassword"
-          autoComplete="new-password"
-          value={confirmPassword}
-          onChange={(e) => handleInputChange('confirmPassword', e.target.value, setConfirmPassword)}
-          onBlur={() => handleBlur('confirmPassword')}
-          error={!!errors.confirmPassword}
-          helperText={errors.confirmPassword}
-        />
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <DatePicker
-            label="Date of Birth"
-            value={dateOfBirth}
-            onChange={(newValue) => {
-              setDateOfBirth(newValue);
-              handleInputChange('dateOfBirth', newValue, setDateOfBirth);
-            }}
-            renderInput={(params) => (
-              <TextField 
-                {...params} 
-                fullWidth 
-                margin="normal" 
-                required 
-                error={showError('dateOfBirth')}
-                helperText={showError('dateOfBirth') ? errors.dateOfBirth : ''}
-              />
-            )}
-            maxDate={maxDate}
-          />
-        </LocalizationProvider>
-        <FormControl fullWidth margin="normal" required error={!!errors.gender}>
-          <InputLabel id="gender-label">Gender</InputLabel>
-          <Select
-            labelId="gender-label"
-            id="gender"
-            value={gender}
-            label="Gender"
-            onChange={(e) => setGender(e.target.value)}
-          >
-            <MenuItem value="male">Male</MenuItem>
-            <MenuItem value="female">Female</MenuItem>
-          </Select>
-          {errors.gender && <Typography color="error">{errors.gender}</Typography>}
-        </FormControl>
         <Grid container spacing={2}>
-          <Grid item xs={5}>
-            <NationalityModel
-              nationality={phoneCountry}
-              setNationality={setPhoneCountry}
-              label="Country Code"
-              error={!!errors.phoneCountry}
-              helperText={errors.phoneCountry}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              autoComplete="given-name"
+              name="firstName"
+              required
+              fullWidth
+              id="firstName"
+              label="First Name"
+              autoFocus
+              value={firstName}
+              onChange={(e) => handleInputChange('firstName', e.target.value, setFirstName)}
+              onBlur={() => handleBlur('firstName')}
+              error={!!errors.firstName}
+              helperText={errors.firstName}
             />
           </Grid>
-          <Grid item xs={7}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              required
+              fullWidth
+              id="lastName"
+              label="Last Name"
+              name="lastName"
+              autoComplete="family-name"
+              value={lastName}
+              onChange={(e) => handleInputChange('lastName', e.target.value, setLastName)}
+              onBlur={() => handleBlur('lastName')}
+              error={!!errors.lastName}
+              helperText={errors.lastName}
+            />
+          </Grid>
+          <Grid item xs={12}>
             <TextField
               margin="normal"
               required
               fullWidth
-              id="phoneNumber"
-              label="Phone Number"
-              name="phoneNumber"
-              autoComplete="tel"
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              error={!!errors.phoneNumber || !!phoneError}
-              helperText={errors.phoneNumber || phoneError}
-              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+              id="username"
+              label="Username"
+              name="username"
+              autoComplete="username"
+              value={username}
+              onChange={(e) => handleInputChange('username', e.target.value, setUsername)}
+              onBlur={() => handleBlur('username')}
+              error={!!errors.username} // Convert string to boolean
+              helperText={errors.username} // Display the error message
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              id="email"
+              label="Email Address"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => handleInputChange('email', e.target.value, setEmail)}
+              error={!!errors.email} // Convert string to boolean
+              helperText={errors.email || emailError} // Display the error message
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label="Password"
+              type="password"
+              id="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => handleInputChange('password', e.target.value, setPassword)}
+              onBlur={() => handleBlur('password')}
+              error={!!errors.password || !!passwordError}
+              helperText={errors.password || passwordError}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              id="confirmPassword"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => handleInputChange('confirmPassword', e.target.value, setConfirmPassword)}
+              onBlur={() => handleBlur('confirmPassword')}
+              error={!!errors.confirmPassword}
+              helperText={errors.confirmPassword}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Date of Birth"
+                value={dateOfBirth}
+                onChange={(newValue) => {
+                  setDateOfBirth(newValue);
+                  handleInputChange('dateOfBirth', newValue, setDateOfBirth);
+                }}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    fullWidth 
+                    margin="normal" 
+                    required 
+                    error={showError('dateOfBirth')}
+                    helperText={showError('dateOfBirth') ? errors.dateOfBirth : ''}
+                  />
+                )}
+                maxDate={maxDate}
+              />
+            </LocalizationProvider>
+          </Grid>
+          <Grid item xs={12}>
+            <FormControl fullWidth margin="normal" required error={!!errors.gender}>
+              <InputLabel id="gender-label">Gender</InputLabel>
+              <Select
+                labelId="gender-label"
+                id="gender"
+                value={gender}
+                label="Gender"
+                onChange={(e) => setGender(e.target.value)}
+              >
+                <MenuItem value="male">Male</MenuItem>
+                <MenuItem value="female">Female</MenuItem>
+              </Select>
+              {errors.gender && <Typography color="error">{errors.gender}</Typography>}
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <Grid container spacing={2}>
+              <Grid item xs={5}>
+                <NationalityModel
+                  nationality={phoneCountry}
+                  setNationality={setPhoneCountry}
+                  label="Country Code"
+                  error={!!errors.phoneCountry}
+                  helperText={errors.phoneCountry}
+                />
+              </Grid>
+              <Grid item xs={7}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="phoneNumber"
+                  label="Phone Number"
+                  name="phoneNumber"
+                  autoComplete="tel"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  error={!!errors.phoneNumber || !!phoneError}
+                  helperText={errors.phoneNumber || phoneError}
+                  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <LanguagePreferenceModel
+              languages={languagePreferences} 
+              setLanguages={setLanguagePreferences}
+              profile={false}
+              onAddLanguage={handleAddLanguage}
+              onRemoveLanguage={handleRemoveLanguage}
+            />
+            {errors.languagePreferences && (
+              <Alert severity="error" sx={{ mt: 2 }}>{errors.languagePreferences}</Alert>
+            )}
+          </Grid>
+          <Grid item xs={12}>
+            <NationalityModel
+              nationality={nationality}
+              setNationality={setNationality}
+              label="Nationality"
             />
           </Grid>
         </Grid>
-        <LanguagePreferenceModel
-          languages={languagePreferences} 
-          setLanguages={setLanguagePreferences}
-          profile={false}
-          onAddLanguage={null}
-          onRemoveLanguage={null}
-        />
-        {errors.languagePreferences && (
-          <Alert severity="error" sx={{ mt: 2 }}>{errors.languagePreferences}</Alert>
-        )}
-        <NationalityModel
-          nationality={nationality}
-          setNationality={setNationality}
-          label="Nationality"
-        />
         <Button
           type="submit"
           fullWidth
