@@ -33,7 +33,7 @@ const GroupPostList = ({ date, mapBounds, onPostsUpdate }) => {
       }
 
       try {
-        console.log('Fetching posts for date:', date.toISOString());
+        console.log('Fetching posts for date:', date.setHours(0, 0, 0, 0));
         console.log('Map bounds:', JSON.stringify(mapBounds));
 
         const response = await axios.get('http://localhost:5000/api/group_posts', {
@@ -55,7 +55,7 @@ const GroupPostList = ({ date, mapBounds, onPostsUpdate }) => {
 
         const filteredPosts = response.data.filter(post => {
           const postDate = new Date(post.date_time);
-          return postDate.toDateString() === date.toDateString();
+          return postDate.setHours(0, 0, 0, 0) === date.setHours(0, 0, 0, 0);
         });
 
         console.log('Filtered posts:', filteredPosts);

@@ -156,7 +156,7 @@ app.delete('/profile', authenticateToken, async (req, res) => {
 app.get('/api/user/profile', authenticateToken, async (req, res) => {
   console.log('Received profile request for user:', req.user);
   try {
-    const result = await pool.query('SELECT first_name, last_name, username, email, language_preferences FROM users WHERE user_id = $1', [req.user.userId]);
+    const result = await pool.query('SELECT first_name, last_name, username, email, language_preferences, user_id FROM users WHERE user_id = $1', [req.user.userId]);
     
     if (result.rows.length > 0) {
       console.log('Profile found:', result.rows[0]);
@@ -474,6 +474,19 @@ app.get('/api/group_posts/:id', authenticateToken, async (req, res) => {
 
     post.users = usersResult.rows;
 
+    // Fetch usernames for requests
+    if (post.requests && post.requests.length > 0) {
+      const requestsResult = await pool.query(
+        `SELECT u.user_id, u.username, u.first_name, u.last_name
+         FROM users u
+         WHERE u.user_id = ANY($1::uuid[])`,
+        [post.requests]
+      );
+      post.requests = requestsResult.rows;
+    } else {
+      post.requests = [];
+    }
+
     console.log('Query result:', post);
     res.json(post);
   } catch (error) {
@@ -524,6 +537,256 @@ app.get('/api/posts/user/:userId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user posts:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message, stack: error.stack });
+  }
+});
+
+// Join group post route
+app.post('/api/group_posts/:id/join', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+
+  console.log(`Attempting to join post ${postId} for user ${userId}`);
+
+  try {
+    // First, check if the post exists
+    const postResult = await pool.query('SELECT * FROM group_posts WHERE id = $1', [postId]);
+    if (postResult.rows.length === 0) {
+      console.log(`Post ${postId} not found`);
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const postData = postResult.rows[0];
+    console.log('Post data:', postData);
+
+    // Check if user is already in the post
+    if (postData.user_ids && postData.user_ids.includes(userId)) {
+      console.log(`User ${userId} is already in the post ${postId}`);
+      return res.status(400).json({ error: 'User is already in the post' });
+    }
+
+    // Check if user has already requested to join
+    if (postData.requests && postData.requests.includes(userId)) {
+      console.log(`User ${userId} has already requested to join post ${postId}`);
+      return res.status(400).json({ error: 'User has already requested to join' });s
+    }
+
+    // Add user to requests array
+    const updateResult = await pool.query(
+      'UPDATE group_posts SET requests = COALESCE(requests, ARRAY[]::uuid[]) || $1::uuid WHERE id = $2 RETURNING *',
+      [userId, postId]
+    );
+
+    console.log('Update result:', updateResult.rows[0]);
+
+    res.json({ message: 'Join request sent successfully' });
+  } catch (error) {
+    console.error('Error joining group post:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Leave group post route
+app.post('/api/group_posts/:id/leave', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+
+  try {
+    // Start a transaction
+    await pool.query('BEGIN');
+
+    // Fetch the current post data
+    const postResult = await pool.query('SELECT * FROM group_posts WHERE id = $1', [postId]);
+    if (postResult.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const post = postResult.rows[0];
+
+    // Check if the leaving user is the host
+    const isHost = post.host_user_id === userId;
+
+    // Remove user from the group post's user_ids
+    const updatedUserIds = post.user_ids.filter(id => id !== userId);
+
+    if (isHost) {
+      if (updatedUserIds.length === 0) {
+        // If no users left, delete the post
+        await pool.query('DELETE FROM group_posts WHERE id = $1', [postId]);
+        
+        // Remove post from all users' group_posts
+        await pool.query(
+          'UPDATE users SET group_posts = array_remove(group_posts, $1)',
+          [postId]
+        );
+      } else {
+        // Update the host to the next user in the list
+        const newHostId = updatedUserIds[0];
+        await pool.query(
+          'UPDATE group_posts SET user_ids = $1, host_user_id = $2 WHERE id = $3',
+          [updatedUserIds, newHostId, postId]
+        );
+      }
+    } else {
+      // If not the host, just update user_ids
+      await pool.query(
+        'UPDATE group_posts SET user_ids = $1 WHERE id = $2',
+        [updatedUserIds, postId]
+      );
+    }
+
+    // Remove post from the leaving user's group_posts
+    await pool.query(
+      'UPDATE users SET group_posts = array_remove(group_posts, $1) WHERE user_id = $2',
+      [postId, userId]
+    );
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    if (isHost && updatedUserIds.length === 0) {
+      res.json({ message: 'Left the post successfully. Post was deleted as no users remained.' });
+    } else {
+      res.json({ message: 'Left the post successfully' });
+    }
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error leaving group post:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Handle join request route
+app.post('/api/group_posts/:id/handle-request', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  const { userId, action } = req.body;
+
+  try {
+    // Start a transaction
+    await pool.query('BEGIN');
+
+    const post = await pool.query('SELECT * FROM group_posts WHERE id = $1', [postId]);
+    if (post.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    const postData = post.rows[0];
+    if (postData.host_user_id !== req.user.userId) {
+      await pool.query('ROLLBACK');
+      return res.status(403).json({ error: 'Only the host can handle requests' });
+    }
+
+    if (action === 'accept') {
+      // Update group_posts table
+      await pool.query(
+        'UPDATE group_posts SET user_ids = array_append(user_ids, $1), requests = array_remove(requests, $1) WHERE id = $2',
+        [userId, postId]
+      );
+
+      // Update users table
+      await pool.query(
+        'UPDATE users SET group_posts = array_append(group_posts, $1) WHERE user_id = $2',
+        [postId, userId]
+      );
+    } else if (action === 'reject') {
+      await pool.query(
+        'UPDATE group_posts SET requests = array_remove(requests, $1) WHERE id = $2',
+        [userId, postId]
+      );
+    } else {
+      await pool.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid action' });
+    }
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    res.json({ message: 'Request handled successfully' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error handling join request:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Withdraw join request route
+app.post('/api/group_posts/:id/withdraw-request', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+
+  try {
+    // Start a transaction
+    await pool.query('BEGIN');
+
+    // Remove user from the group post's requests
+    const updateResult = await pool.query(
+      'UPDATE group_posts SET requests = array_remove(requests, $1) WHERE id = $2 RETURNING *',
+      [userId, postId]
+    );
+
+    if (updateResult.rows.length === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    res.json({ message: 'Request withdrawn successfully' });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    console.error('Error withdrawing join request:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Edit group post route
+app.put('/api/group_posts/:id', authenticateToken, async (req, res) => {
+  const postId = req.params.id;
+  const userId = req.user.userId;
+  const {
+    title,
+    gender_preference,
+    language_preference,
+    age_range_min,
+    age_range_max,
+    group_size,
+    itinerary,
+    date_time,
+    location
+  } = req.body;
+
+  try {
+    // Check if the user is the host
+    const postResult = await pool.query('SELECT host_user_id FROM group_posts WHERE id = $1', [postId]);
+    if (postResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    if (postResult.rows[0].host_user_id !== userId) {
+      return res.status(403).json({ error: 'Only the host can edit the post' });
+    }
+
+    // Update the post
+    await pool.query(
+      `UPDATE group_posts SET
+        title = $1,
+        gender_preference = $2,
+        language_preference = $3,
+        age_range_min = $4,
+        age_range_max = $5,
+        group_size = $6,
+        itinerary = $7,
+        date_time = $8,
+        location = $9
+      WHERE id = $10`,
+      [title, gender_preference, language_preference, age_range_min, age_range_max, group_size, itinerary, date_time, location, postId]
+    );
+
+    res.json({ message: 'Post updated successfully' });
+  } catch (error) {
+    console.error('Error updating group post:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

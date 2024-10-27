@@ -46,8 +46,8 @@ function DelayedZoom({ delay }) {
 }
 
 
-const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, groupPostList, selectedDate, allHeritexData }) => {
-    const [position, setPosition] = useState([37.77, -122.41]); // Default to San Francisco
+const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, groupPostList, selectedDate, allHeritexData, initialLocation = null }) => {
+    const [position, setPosition] = useState(initialLocation || [37.77, -122.41]); // Default to San Francisco
     const [locationError, setLocationError] = useState(null);
     const [address, setAddress] = useState('');
     const [searchQuery, setSearchQuery] = useState([]);
@@ -59,11 +59,15 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
     const [selectedMarker, setSelectedMarker] = useState(null);
 
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setPosition([position.coords.latitude, position.coords.longitude]);
-            },
-            (error) => {
+        if (initialLocation) {
+            console.log("map model initial location:", initialLocation);
+            setPosition(initialLocation);
+        } else {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setPosition([position.coords.latitude, position.coords.longitude]);
+                },
+                (error) => {
                 console.error("Error getting location:", error);
                 // Fallback to IP-based location
                 axios.get('https://ipapi.co/json/')
@@ -76,7 +80,8 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
                     });
             }
         );
-    }, []);
+        }
+    }, [initialLocation]);
 
     useEffect(() => {
         // Fetch address only when position has changed
@@ -117,12 +122,12 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
 
     useEffect(() => {
         if (groupPostList && groupPostList.length > 0) {
-            console.log('Processing groupPostList:', groupPostList);
             const markers = groupPostList.filter(post => {
                 const postDate = new Date(post.date_time);
-                return postDate.toDateString() === selectedDate.toDateString();
+                console.log('postDate:', postDate);
+                console.log('selectedDate:', selectedDate);
+                return postDate.setHours(0, 0, 0, 0) === selectedDate.setHours(0, 0, 0, 0);
             }).map(post => {
-                console.log('Processing post:', post);
                 if (post.location) {
                     const [lat, lng] = post.location.split(',').map(Number);
                     if (!isNaN(lat) && !isNaN(lng)) {
@@ -251,11 +256,8 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
 
     // New useEffect for Heritex data
     useEffect(() => {
-        console.log('MapModel received allHeritexData:', allHeritexData);
         if (allHeritexData && allHeritexData.length > 0) {
-            console.log('Processing allHeritexData:', allHeritexData);
             const markers = allHeritexData.map(item => {
-                console.log('Processing Heritex item:', item);
                 if (item.location && typeof item.location.x === 'number' && typeof item.location.y === 'number') {
                     return {
                         position: [item.location.x, item.location.y],
@@ -341,6 +343,7 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
                 >
                     <Popup>
                         {address}
+                        {console.log("map model position:", position)}
                         <br />
                         Latitude: {position[0].toFixed(4)}, Longitude: {position[1].toFixed(4)}
                     </Popup>
@@ -353,7 +356,7 @@ const MapModel = ({ onLocationChange, isDraggable = false, onBoundsChange, group
                             <br />
                             Host: {marker.host}
                             <br />
-                            Date: {marker.dateTime.toLocaleString()}
+                            Date: {marker.dateTime.toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         </Popup>
                     </Marker>
                 ))}

@@ -1,0 +1,94 @@
+.edit-post-page {
+  padding-bottom: 20px;
+}
+
+.edit-post-page .app-bar {
+  margin-bottom: 20px;
+}
+
+.edit-post-page .title {
+  flex-grow: 1;
+  text-align: center;
+}
+
+.edit-post-page .back-button {
+  margin-right: 10px;
+}
+
+.edit-post-page .menu-button {
+  margin-left: auto;
+}
+
+.edit-post-page .map-container {
+  height: 300px;
+  margin-bottom: 20px;
+}
+
+.edit-post-page .MuiTextField-root,
+.edit-post-page .MuiFormControl-root {
+  margin-bottom: 20px;
+}
+
+.edit-post-page .MuiButton-root {
+  margin-top: 20px;
+}
+
+.edit-post-page .MuiTypography-h6 {
+  margin-bottom: 10px;
+}
+
+.edit-post-page .MuiGrid-container {
+  margin-bottom: 20px;
+}
+
+.edit-post-page .MuiFormHelperText-root {
+  color: #f44336;
+}
+
+.edit-post-page .MuiInputLabel-root.Mui-focused {
+  color: #1976d2;
+}
+
+.edit-post-page .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #1976d2;
+}
+
+.edit-post-page .MuiSelect-select:focus {
+  background-color: transparent;
+}
+
+.edit-post-page .MuiChip-root {
+  margin: 2px;
+}
+
+.edit-post-page .MuiAutocomplete-root {
+  width: 100%;
+}
+
+.edit-post-page .MuiDateTimePicker-root {
+  width: 100%;
+}
+
+.edit-post-page .MuiPickersDay-daySelected {
+  background-color: #1976d2;
+}
+
+.edit-post-page .MuiPickersDay-daySelected:hover {
+  background-color: #1565c0;
+}
+
+.edit-post-page .MuiPickersClock-pin {
+  background-color: #1976d2;
+}
+
+.edit-post-page .MuiPickersClockPointer-pointer {
+  background-color: #1976d2;
+}
+
+.edit-post-page .MuiPickersClockPointer-thumb {
+  border: 14px solid #1976d2;
+}
+
+.edit-post-page .MuiPickersClock-clock {
+  background-color: #e0e0e0;
+}

@@ -12,6 +12,7 @@ import SettingsPage from '../pages/SettingsPage';
 import ProfilePage from '../pages/ProfilePage';
 import ViewPostPage from '../pages/ViewPostPage';
 import HeritexPage from '../pages/HeritexPage';
+import EditPostPage from '../pages/EditPostPage';
 
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/heritex" element={<HeritexPage />} />
+            <Route path="/edit-post/:postId" element={<EditPostPage />} />
         </Routes>
         </Router>
 

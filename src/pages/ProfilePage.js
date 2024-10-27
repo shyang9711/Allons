@@ -395,6 +395,7 @@ function ProfilePage() {
           )}
         </Box>
         {isOwnProfile? (
+          <>
           <Box className="profile-section">
             <LanguagePreferenceModel
             languages={languagePreferences} 
@@ -403,6 +404,18 @@ function ProfilePage() {
             onRemoveLanguage={handleRemoveLanguage}
             />
           </Box>
+          
+          <Box className="profile-section" sx={{ mb: 2 }}>  {/* Reduced bottom margin */}
+            <Button
+              variant="contained"
+              color="error"
+              fullWidth
+              onClick={() => setOpenDeleteDialog(true)}
+            >
+              Delete Account
+            </Button>
+          </Box>
+          </>
         ): ( 
           <>
             <Typography variant="h6" gutterBottom>Preferred Languages : </Typography>
@@ -413,18 +426,28 @@ function ProfilePage() {
             </List>
           </>
         )}
-        {isOwnProfile && (
-          <Box className="profile-section">
-            <Button
-              variant="contained"
-              color="error"
-              fullWidth
-              onClick={() => setOpenDeleteDialog(true)}
-            >
-              Delete Account
-            </Button>
-          </Box>
-        )}
+
+        <Box sx={{ mt: 2 }}>  {/* Added a small top margin */}
+          <Typography variant="h6" gutterBottom>Posts Joined:</Typography>
+          {loading ? (
+            <CircularProgress />
+          ) : userPosts.length > 0 ? (
+            <List disablePadding>  {/* Disabled default padding */}
+              {userPosts.map((post) => (
+                <ListItem key={post.id} component={Link} to={`/post/${post.id}`} disableGutters>  {/* Removed gutters */}
+                  <ListItemText 
+                    primary={post.title} 
+                    secondary={new Date(post.date_time).toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })} 
+                  />
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography variant="body1">
+              {error ? 'Error loading posts.' : "This user hasn't joined any posts yet."}
+            </Typography>
+          )}
+        </Box>
       </Container>
 
       {/* Delete Account Confirmation Dialog */}
@@ -457,26 +480,6 @@ function ProfilePage() {
       />
 
       {error && <Alert severity="error">{error}</Alert>}
-
-      <Typography variant="h6" gutterBottom>Posts Joined:</Typography>
-      {loading ? (
-        <CircularProgress />
-      ) : userPosts.length > 0 ? (
-        <List>
-          {userPosts.map((post) => (
-            <ListItem key={post.id} component={Link} to={`/post/${post.id}`}>
-              <ListItemText 
-                primary={post.title} 
-                secondary={new Date(post.date_time).toLocaleString()} 
-              />
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Typography variant="body1">
-          {error ? 'Error loading posts.' : "This user hasn't joined any posts yet."}
-        </Typography>
-      )}
     </Container>
   );
 }

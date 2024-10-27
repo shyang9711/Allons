@@ -41,7 +41,7 @@ function SignupPage() {
   };
 
   const validateEmail = (email) => {
-    const regex = /^[a-zA-Z0-9]+@(gmail|naver)\.com$/;
+    const regex = /^[a-zA-Z0-9]+@(gmail|naver|refyze)\.com$/;
     return regex.test(email);
   };
 
